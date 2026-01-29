@@ -3,16 +3,16 @@ Script de diagnóstico Modbus.
 Testa diferentes configurações para encontrar o endereço correto.
 """
 
-import argparse
 import logging
 from modbus.client import ModbusClientRS485
-
-from settings import load_settings
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
+
+PORT = "COM12"
+SLAVE_ID = 1
 
 # =========================
 # TESTES
@@ -115,31 +115,17 @@ def test_slave_ids(client):
 # =========================
 
 def main():
-    parser = argparse.ArgumentParser(description="Diagnóstico Modbus")
-    parser.add_argument(
-        "--config",
-        help="Caminho do arquivo INI (padrão: ./config.ini ou env MODBUS_CONFIG)",
-    )
-    args = parser.parse_args()
-
-    cfg = load_settings(args.config)
-
     print("\n")
     print("╔" + "="*58 + "╗")
     print("║" + " "*15 + "DIAGNÓSTICO MODBUS" + " "*25 + "║")
     print("╚" + "="*58 + "╝")
-    print(f"\nPorta: {cfg.modbus.port}")
-    print(f"Slave ID inicial: {cfg.modbus.slave_id}")
+    print(f"\nPorta: {PORT}")
+    print(f"Slave ID inicial: {SLAVE_ID}")
     print("\n")
     
     client = ModbusClientRS485(
-        port=cfg.modbus.port,
-        baudrate=cfg.modbus.baudrate,
-        parity=cfg.modbus.parity,
-        stopbits=cfg.modbus.stopbits,
-        bytesize=cfg.modbus.bytesize,
-        timeout=cfg.modbus.timeout,
-        slave_id=cfg.modbus.slave_id,
+        port=PORT,
+        slave_id=SLAVE_ID,
         retries=1,  # apenas 1 tentativa para diagnóstico rápido
     )
     
@@ -152,8 +138,8 @@ def main():
         print("\n>>> ETAPA 1: Verificar Slave ID")
         found_slave = test_slave_ids(client)
         
-        if found_slave and found_slave != cfg.modbus.slave_id:
-            print(f"\n⚠️  ATENÇÃO: Slave ID correto é {found_slave}, não {cfg.modbus.slave_id}")
+        if found_slave and found_slave != SLAVE_ID:
+            print(f"\n⚠️  ATENÇÃO: Slave ID correto é {found_slave}, não {SLAVE_ID}")
             client.slave_id = found_slave
         
         # Teste 2: Base address correto?
