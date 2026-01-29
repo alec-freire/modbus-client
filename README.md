@@ -26,14 +26,17 @@ pip install -r requirements.txt
 ### Modo Produção (Hardware Real)
 
 1. Conecte o conversor RS-485/USB
-2. Configure a porta COM no `process.py`:
-   ```python
-   PORT = "COM3"  # ajuste conforme seu sistema
-   ```
+2. Crie seu arquivo de configuração (fora do código):
+   - Copie `config.example.ini` para `config.ini`
+   - Ajuste a porta em `[modbus] port` (ex.: `COM3`, `COM12`, `/dev/ttyUSB0`)
 3. Execute:
    ```bash
    python process.py
    ```
+
+Opcional:
+- Usar outro arquivo: `python process.py --config .\meu_modbus.ini`
+- Usar variável de ambiente: `set MODBUS_CONFIG=C:\caminho\config.ini`
 
 ### Modo Teste (Servidor Simulado)
 
@@ -58,10 +61,10 @@ socat -d -d pty,raw,echo=0 pty,raw,echo=0
 # Anote os PTYs criados (ex: /dev/pts/2 e /dev/pts/3)
 
 # Terminal 2 - servidor
-python test_server.py  # configure PORT com um PTY
+python test_server.py
 
 # Terminal 3 - client
-python process.py  # configure PORT com o outro PTY
+python process.py
 ```
 
 ## 📊 Perfis de Leitura
@@ -80,6 +83,8 @@ Disponíveis em `reader.py`:
 - **Byte size**: 8
 - **Timeout**: 1.0s
 - **Retries**: 3
+
+As configurações ficam no arquivo `config.ini` (copie de `config.example.ini`).
 
 ## 📝 Exemplo de Uso Programático
 

@@ -1,18 +1,10 @@
+import argparse
 import logging
 import time
 
 from modbus.client import ModbusClientRS485
 from modbus.reader import read_profile
-
-# =========================
-# CONFIGURAÇÕES
-# =========================
-
-PORT = "COM12"           # Windows -> COM3 | Linux -> /dev/ttyUSB0
-SLAVE_ID = 1
-BASE_ADDRESS = 0      # se não funcionar, teste 1
-
-LOG_LEVEL = logging.INFO
+from settings import load_settings
 
 
 # =========================
@@ -20,17 +12,31 @@ LOG_LEVEL = logging.INFO
 # =========================
 
 def main():
+    parser = argparse.ArgumentParser(description="Modbus client - leitura de perfis")
+    parser.add_argument(
+        "--config",
+        help="Caminho do arquivo INI (padrão: ./config.ini ou env MODBUS_CONFIG)",
+    )
+    args = parser.parse_args()
+
+    cfg = load_settings(args.config)
+
     logging.basicConfig(
-        level=LOG_LEVEL,
+        level=getattr(logging, cfg.logging.level.upper(), logging.INFO),
         format="%(asctime)s | %(levelname)s | %(message)s",
     )
 
     log = logging.getLogger("main")
 
     client = ModbusClientRS485(
-        port=PORT,
-        baudrate=9600,
-        slave_id=SLAVE_ID,
+        port=cfg.modbus.port,
+        baudrate=cfg.modbus.baudrate,
+        parity=cfg.modbus.parity,
+        stopbits=cfg.modbus.stopbits,
+        bytesize=cfg.modbus.bytesize,
+        timeout=cfg.modbus.timeout,
+        retries=cfg.modbus.retries,
+        slave_id=cfg.modbus.slave_id,
     )
 
     while True:
@@ -41,13 +47,13 @@ def main():
             while True:
                 data = read_profile(
                     client,
-                    profile="basic",
-                    base_address=BASE_ADDRESS,
-                    slave_id=SLAVE_ID,
+                    profile=cfg.read.profile,
+                    base_address=cfg.read.base_address,
+                    slave_id=cfg.modbus.slave_id,
                 )
 
                 log.info("Dados lidos: %s", data)
-                time.sleep(1)
+                time.sleep(cfg.read.interval_seconds)
 
         except Exception as e:
             log.error("Erro: %s", e)
